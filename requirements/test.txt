@@ -1,9 +1,25 @@
 -r base.txt
 
-pytest
-pytest-asyncio
-httpx
+# Base testing framework
+pytest>=7.4.0,<8.0.0
+pytest-asyncio>=0.21.0,<0.22.0 # For testing async code
+pytest-cov>=4.1.0,<5.0.0     # For code coverage
+pytest-mock>=3.11.0,<4.0.0    # For mocking
+
+# HTTP client for TestClient (FastAPI's TestClient uses httpx)
+httpx>=0.24.0,<0.25.0
+
+# Test data generation
+factory-boy>=3.2.0,<3.3.0
+# pytest-factoryboy>=2.5.0,<2.6.0 # Optional: for easier fixture generation
+
+# Linting and formatting
 ruff
 black
 mypy
-python-dotenv 
+
+# Optional (Add if explicitly needed for specific test types)
+# freezegun>=1.2.0,<1.3.0
+# pytest-celery>=0.0.0 # (Ensure compatibility with your Celery setup)
+# fakeredis[aioredis]>=2.20.0,<2.21.0 # For faking Redis
+# sqlalchemy-utils # If using for test database creation/dropping utilities 

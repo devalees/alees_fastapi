@@ -31,6 +31,7 @@ ENV/
 .env
 .env.*
 !.env.example
+!.env.test  # Allow the test environment template
 
 # Database
 *.db
@@ -80,6 +81,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+.pytest_cache/
 
 # pyenv
 .python-version

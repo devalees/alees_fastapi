@@ -13,10 +13,12 @@ COPY requirements/ /app/requirements/
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements/dev.txt
 
-# Copy application code
+# Copy application code and test files
 COPY app/ /app/app/
 COPY alembic/ /app/alembic/
 COPY alembic.ini /app/
+COPY tests/ /app/tests/
+COPY pytest.ini /app/
 
 # Expose port
 EXPOSE 8000

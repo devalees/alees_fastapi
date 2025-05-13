@@ -16,6 +16,29 @@ services:
       - postgres
       - redis
 
+  # Test service for running tests
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./app:/app/app
+      - ./tests:/app/tests
+      - ./pytest.ini:/app/pytest.ini
+    environment:
+      - ENVIRONMENT=test
+      - DEBUG_MODE=False
+      - DATABASE_URL=postgresql+asyncpg://erp_user:erp_pass@postgres:5432/erp_test_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_CACHE_DB=9
+      - LOG_LEVEL=INFO
+    command: python -m pytest -xvs tests/features/health/api/test_health_router.py
+    depends_on:
+      - postgres
+      - redis
+
   postgres:
     image: postgres:14
     ports:
@@ -24,7 +47,9 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-erp_user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-erp_pass}
       - POSTGRES_DB=${POSTGRES_DB:-erp_dev_db}
+      - POSTGRES_MULTIPLE_DATABASES=erp_test_db
     volumes:
+      - ./scripts/create-multiple-postgresql-databases.sh:/docker-entrypoint-initdb.d/create-multiple-postgresql-databases.sh
       - postgres_data:/var/lib/postgresql/data
 
   redis:
