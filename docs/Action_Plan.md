@@ -1,0 +1,120 @@
+
+**Action Plan: Phase 0 - Foundational Setup & Core Infrastructure**
+
+**Objective:** Establish the project structure, core configurations, CI/CD pipeline, and essential infrastructure components. No end-user business features yet, but a runnable FastAPI application with a health check endpoint, connected to a database, and basic CI.
+
+**Deliverable:** A runnable FastAPI application with a health check endpoint (e.g., `/healthz/live`), successfully connecting to PostgreSQL and Redis (via Docker Compose for local dev). Initial CI pipeline performing linting, testing (of the health check), and Docker image build.
+
+---
+
+**A. Project Initialization & Local Environment Setup**
+
+1.  **Task A1: Initialize Project Directory Structure.**
+    *   **Action:** Create the main directories: `erp_project/`, `erp_project/app/`, `erp_project/app/core/`, `erp_project/app/features/` (initially empty), `erp_project/tests/`, `erp_project/requirements/`. The `erp_project/alembic/` directory will be created by Alembic later.
+    *   **Reference:** `project_structure.md`
+
+2.  **Task A2: Setup Python Dependencies (`requirements/` files).**
+    *   **Action:** Create `requirements/base.txt`, `requirements/dev.txt`, `requirements/test.txt`, `requirements/prod.txt`.
+    *   **Add initial core dependencies to `base.txt`:** `fastapi`, `uvicorn[standard]`, `pydantic`, `pydantic-settings`, `sqlalchemy[asyncio]`, `asyncpg`, `alembic`, `redis[hiredis]`, `python-json-logger`.
+    *   **Add initial dev/test dependencies to `dev.txt` & `test.txt`:** `pytest`, `pytest-asyncio`, `httpx`, `ruff`, `black` (or use Ruff for formatting), `mypy` (if using), `python-dotenv`.
+    *   **Reference:** Our discussion on `requirements/` structure; specific libraries from various strategy docs.
+
+3.  **Task A3: Implement Core Application Configuration (`app/core/config.py`).**
+    *   **Action:** Create the Pydantic `Settings` class in `app/core/config.py`.
+    *   Define initial essential settings: `APP_NAME`, `DEBUG_MODE`, `ENVIRONMENT`, `API_V1_PREFIX`, `TIME_ZONE`, `DATABASE_URL` (as `PostgresDsn`), `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` (optional), `REDIS_CACHE_DB`.
+    *   Configure `SettingsConfigDict` to load from an `.env` file.
+    *   Create `.env.example` listing these initial settings.
+    *   Create a local `.env` file for development with appropriate values.
+    *   **Reference:** `configuration_management_strategy.md (FastAPI Edition)` - Sections on Pydantic Settings and .env files.
+
+4.  **Task A4: Setup Local Docker Environment (`Dockerfile`, `docker-compose.yml`).**
+    *   **Action (Dockerfile):** Create `Dockerfile` for the FastAPI application:
+        *   Use `python:3.10-slim` (or chosen version) as base.
+        *   Set workdir, Python environment variables.
+        *   Copy `requirements/` and install `requirements/base.txt` (and `prod.txt` for a production build, or `dev.txt` for a dev image).
+        *   Copy application code (`app/`, `alembic/`, `alembic.ini`).
+        *   Expose port (e.g., 8000).
+        *   Basic `CMD` for Uvicorn: `uvicorn app.main:app --host 0.0.0.0 --port 8000`.
+    *   **Action (docker-compose.yml):** Create `docker-compose.yml` with services for:
+        *   `api`: Builds from `Dockerfile`, mounts `app/` for live reload (using `--reload` in Uvicorn command for dev), uses `.env` file for environment variables, maps port 8000.
+        *   `postgres`: Uses official `postgres` image, configures `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` from `.env` variables, maps port 5432, sets up a persistent named volume for data.
+        *   `redis`: Uses official `redis` image, maps port 6379, optional persistent named volume.
+    *   **Reference:** `development_setup_guide.md (FastAPI Edition)` - Sections on Docker.
+
+**B. Database Setup (PostgreSQL, SQLAlchemy, Alembic)**
+
+5.  **Task B1: Implement Core Database Module (`app/core/db.py`).**
+    *   **Action:** Define SQLAlchemy `async_engine` (using `settings.DATABASE_URL`), `AsyncSessionLocal` (session factory), and declarative `Base`.
+    *   **Reference:** `database_strategy_postgresql.md (FastAPI Edition)` - Section 9.3 (General Setup).
+
+6.  **Task B2: Initialize and Configure Alembic.**
+    *   **Action:**
+        *   Run `docker-compose run --rm api alembic init alembic` to create `alembic/` and `alembic.ini`.
+        *   Configure `alembic.ini` to use `sqlalchemy.url = %(DATABASE_URL)s`.
+        *   Configure `alembic/env.py` to: import `Base.metadata`, set `target_metadata`, use `app_settings.DATABASE_URL` for the async engine in `run_migrations_online`, and configure offline mode. Include naming conventions.
+    *   **Reference:** `database_migration_strategy.md (FastAPI Edition)` - Sections 8.2, 8.3, 8.4.
+
+7.  **Task B3: Create First (Empty or Initial Models) Alembic Migration.**
+    *   **Action:** If initial models (e.g., Organization) are defined in Phase 0 for basic API functionality, generate an autogenerated migration:
+        `docker-compose run --rm api alembic revision --autogenerate -m "create_initial_core_tables"`
+        Otherwise, create an empty placeholder:
+        `docker-compose run --rm api alembic revision -m "initial_alembic_setup"`
+    *   Review the script.
+    *   Apply to the development database: `docker-compose run --rm api alembic upgrade head`.
+    *   **Reference:** `database_migration_strategy.md (FastAPI Edition)` - Section 8.6.
+
+**C. Basic FastAPI Application Implementation**
+
+8.  **Task C1: Create Main FastAPI App Instance (`app/main.py`).**
+    *   **Action:** Initialize `FastAPI()` app instance. Define `on_startup` and `on_shutdown` events to manage resources like Redis connection pools (from `app.core.redis_client.py` - to be created).
+    *   Implement the `get_db_session` dependency in `app/core/dependencies.py`.
+    *   Include basic application routers (e.g., for health checks).
+    *   **Reference:** `api_strategy.md (FastAPI Edition)` - Section 10.2. `database_strategy_postgresql.md (FastAPI Edition)` - Section 9.4. `cache_redis_strategy.md (FastAPI Edition)` - Section 12.4.
+
+9.  **Task C2: Implement Standardized Error Handling (`app/main.py`).**
+    *   **Action:** Define Pydantic schemas for error responses (`ErrorResponse`, `ErrorDetail`, etc. in `app/core/schemas/errors.py`).
+    *   Implement and register custom exception handlers in `app/main.py` for `RequestValidationError`, `HTTPException`, and generic `Exception`.
+    *   **Reference:** `api_strategy.md (FastAPI Edition)` - Sections 5.2 & 10.2 (handler example). `validation_strategy.md (FastAPI Edition)` - Section 7.2 & 7.3.
+
+10. **Task C3: Implement CORS Middleware (`app/main.py`).**
+    *   **Action:** Add `CORSMiddleware` to the FastAPI app, configured via `settings.CORS_ALLOWED_ORIGINS`.
+    *   **Reference:** `security_strategy.md (FastAPI Edition)` - Section 11.2.
+
+11. **Task C4: Implement Basic Security Headers Middleware (`app/main.py`).**
+    *   **Action:** Create `app/core/middleware/security_headers.py` and implement `SecurityHeadersMiddleware`. Add it to the FastAPI app.
+    *   **Reference:** `security_strategy.md (FastAPI Edition)` - Section 11.3.
+
+12. **Task C5: Implement Structured Logging Setup.**
+    *   **Action:**
+        *   Create `app/core/request_context.py` for `request_id_ctx_var`.
+        *   Create `app/core/middleware/request_id_middleware.py`.
+        *   Create `app/core/logging_config.py` with `CustomJsonFormatter` and `setup_logging()`.
+        *   Call `setup_logging()` and add `RequestIDMiddleware` in `app/main.py`.
+    *   **Reference:** `logging_strategy.md (FastAPI Edition)` (or `monitoring_strategy.md` where it was detailed).
+
+13. **Task C6: Implement Basic Health Check Endpoint(s).**
+    *   **Action:** Create `app/features/health/router.py` with `/healthz/live` (simple "alive" status) and a basic `/healthz/ready` endpoint that attempts a `SELECT 1` database query.
+    *   Include this router in `app/main.py`.
+    *   **Reference:** `monitoring_strategy.md (FastAPI Edition)` - Section 8.5.
+
+14. **Task C7: Setup Redis Client Module (`app/core/redis_client.py`).**
+    *   **Action:** Implement `init_app_redis_pool`, `get_redis_app_cache_client`, `close_app_redis_pool` for the general application cache, using `settings.APP_CACHE_REDIS_URL`.
+    *   Call init/close in `app/main.py` startup/shutdown events.
+    *   **Reference:** `cache_redis_strategy.md (FastAPI Edition)` - Section 12.3 & 12.4.
+
+**D. Initial Testing & CI Setup**
+
+15. **Task D1: Configure Pytest (`pytest.ini`, `tests/conftest.py`).**
+    *   **Action:** Create `pytest.ini` (set `ENVIRONMENT=test`).
+    *   Create initial `tests/conftest.py` with fixtures: `event_loop`, `setup_test_database` (using `Base.metadata.create_all/drop_all` or Alembic), `db_session` (transactional), `test_client` (`AsyncClient`), and override for `get_db_session` FastAPI dependency.
+    *   **Reference:** `testing_environment_setup.md (FastAPI Edition)`.
+
+16. **Task D2: Write First API Test for Health Check.**
+    *   **Action:** Create `tests/features/health/api/test_health_router.py` with a test for the `/healthz/live` endpoint.
+    *   **Reference:** `testing_strategy_tdd.md (FastAPI Edition)`.
+
+17. **Task D3: Setup Initial CI Pipeline (e.g., GitHub Actions).**
+    *   **Action:** Create CI workflow file.
+    *   Define stages: Checkout, Setup Python, Install Dev Dependencies (`requirements/dev.txt`), Run Linters (Ruff/Black), Run Pytest, Build Docker image.
+    *   (Pushing Docker image to a registry can be added once a registry is configured).
+    *   **Reference:** `deployment_strategy_and_ci_cd.md (FastAPI Edition)` - Section 4 (CI Pipeline general setup).

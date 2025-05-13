@@ -1,0 +1,108 @@
+=== FOR IMPLEMENTATION ===
+based on project rules and attached implementation steps file do the following:
+1.  **Task A1: Initialize Project Directory Structure.**
+    *   **Action:** Create the main directories: `app/`, `app/core/`, `app/features/` (initially empty), `tests/`, `requirements/`. The `alembic/` directory will be created by Alembic later.
+    *   **Reference:** `project_structure.md`
+
+ 
+with the following MUST follow rules:
+- MUST follow the attached document literally
+- DON'T expand your work beyond this task
+- DON'T install dependencies directly, check the requirements directory first.
+- DON'T AFFECT OTHER IMPLEMENTATIONS
+- Test coverage score at least 90%
+- Follow Project Folder Structure
+- Produce the latest state from time to time briefly 
+
+
+Did you finished the following step:
+  ### 3.2 Factory Definition (`tests/factories.py`)
+
+  [ ] Define `OrganizationTypeFactory` in `api/v1/base_models/organization/tests/factories.py`:
+
+
+
+=== FOR TEST ===
+please run docker-compose run --rm test to examine if any failed tests
+-focus on the failing tests
+-fix one by one, then run the tests.
+- keep running the tests until all tests are passed
+- adding some console logs in potential areas caused the failed may helps 
+- run the tests to verify the implementation is passed
+
+- run the tests to verify that the actual implementation is passed
+
+- please read this document carefully, and summarize what you got in maximum 10 points.
+- Produce the latest state of organizationtype implementation briefly 
+- please create postman collection with all environment settings included for all endpoints with examples templates here  
+- please read the attached implementation steps carefully and asses the current state of this app compared to this documentation 
+
+
+- MUST follow the attached document literally
+
+- Please update the implementation steps file to reflect our latest progress 
+- Please Git add & commit latest updates with proper description
+- please Create an API documentation file (api.md) for all endpoints with detailed examples 
+
+git reset --hard HEAD
+git clean -fd
+
+
+
+
+
+
+update the implementation steps file to reflect our progress
+
+run npm test to verify that the actual implementation is passed
+
+git reset --hard HEAD
+git clean -fd
+git commit --no-verify -m ""
+
+
+please run global pytest  to examine some failed tests
+-focus on the failing tests
+-fix one by one, then run the tests..
+-keep running the tests until all tests are passed
+
+
+
+
+
+  [ ] Run setup/verification API tests; expect pass. Refactor views.
+
+
+
+
+please we need to enhance coverage rate to at least 90%
+The contact models have 81% coverage
+The contact serializers have 80% coverage
+The contact views have 79% coverage
+
+
+
+docker volume rm alees_postgres_data
+docker-compose up -d postgres redis
+
+
+
+
+
+
+- please read this document    carefully, and summarize what you got in maximum 10 points.@org_aware_rbac_implementation_steps.md 
+
+Great!
+this is the rbac system we implemented. please review it before we start the next task! 
+/home/ehab/Desktop/alees/core/rbac
+
+
+Great!
+You got the point the next step is:
+
+### 3.9 Integrate Mixins/Base Classes
+[ ] **(Implement)** Identify all ViewSets managing `OrganizationScoped` models. Inherit from `OrganizationScopedViewSetMixin` and ensure `permission_classes` includes `HasModelPermissionInOrg`.
+[ ] **(Implement)** Identify all Serializers for `OrganizationScoped` models. Inherit from `OrganizationScopedSerializerMixin`. Adjust `organization` field definition (e.g., `read_only=True`, `required=False/True`).
+[ ] **(Test)** Rerun API tests for affected ViewSets (CRUD, list).
+
+
